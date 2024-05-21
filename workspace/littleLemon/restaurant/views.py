@@ -10,6 +10,9 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from .serializers import MenuSerializer
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
+from .forms import BookingForm
+import json
+from datetime import datetime
 
 def home(request):
     return render(request, 'index.html')
@@ -19,7 +22,40 @@ def about(request):
     return render(request, 'about.html')
 
 
-# Create your views here. 
+def book(request):
+    form = BookingForm()
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            form.save()
+    context = {'form': form}
+    return render(request, 'book.html', context)
+
+
+def bookings(request):
+    if request.method == 'POST':
+        data = json.load(request)
+        exist = Booking.objects.filter(reservation_date=data['reservation_date']).filter(
+            reservation_slot=data['reservation_slot']).exists()
+        if exist == False:
+            booking = Booking(
+                first_name=data['first_name'],
+                reservation_date=data['reservation_date'],
+                reservation_slot=data['reservation_slot'],
+            )
+            booking.save()
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+
+    date = request.GET.get('date', datetime.today().date())
+
+    bookings = Booking.objects.all().filter(reservation_date=date)
+    booking_json = serializers.serialize('json', bookings)
+
+    return HttpResponse(booking_json, content_type='application/json')
+
+
+
 class MenuItemView(ListCreateAPIView):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
