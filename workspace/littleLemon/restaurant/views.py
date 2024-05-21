@@ -21,7 +21,11 @@ def home(request):
 def about(request):
     return render(request, 'about.html')
 
-
+def menu(request):
+    menu_data = Menu.objects.all()
+    main_data = {"menu": menu_data}
+    return render(request, 'menu.html', {"menu": main_data})
+    
 def book(request):
     form = BookingForm()
     if request.method == 'POST':
@@ -54,7 +58,7 @@ def bookings(request):
 
     return HttpResponse(booking_json, content_type='application/json')
 
-
+#capstone
 
 class MenuItemView(ListCreateAPIView):
     queryset = Menu.objects.all()
